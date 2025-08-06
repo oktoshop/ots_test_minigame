@@ -193,7 +193,7 @@
             { emoji: '🥩', name: 'Carne', properties: ['meat'] }, { emoji: '🍣', name: 'Salmón', properties: ['fish'] },
             { emoji: '🐟', name: 'Pescado', properties: ['fish'] }, { emoji: '🍤', name: 'Camarón', properties: ['shellfish'] },
             { emoji: '🦞', name: 'Langosta', properties: ['shellfish'] }, { emoji: '🥚', name: 'Huevo', properties: ['egg'] },
-            { emoji: '🥛', name: 'Leche', properties: ['dairy'] }, { emoji: '�', name: 'Queso', properties: ['dairy'] },
+            { emoji: '🥛', name: 'Leche', properties: ['dairy'] }, { emoji: '🧀', name: 'Queso', properties: ['dairy'] },
             { emoji: '🍞', name: 'Pan', properties: ['gluten'] }, { emoji: '🍝', name: 'Pasta', properties: ['gluten'] },
             { emoji: '🥡', name: 'Tofu', properties: ['soy'] }, { emoji: '🥜', name: 'Maní', properties: ['nuts'] },
             { emoji: '🌰', name: 'Castaña', properties: ['nuts'] }, { emoji: '🍩', name: 'Dona', properties: ['gluten', 'dairy', 'egg', 'unhealthy'] },
@@ -232,14 +232,13 @@
             currentAllergies = [];
             const shuffledAllergies = [...ALL_ALLERGIES].sort(() => 0.5 - Math.random());
             
-            // Dificultad progresiva de alergias
             const allergyCount = Math.min(level, 3);
             
             for (let i = 0; i < allergyCount; i++) {
                 currentAllergies.push(shuffledAllergies[i]);
             }
             
-            foods = []; // Limpiar comida del nivel anterior
+            foods = []; 
             updateUI();
             showLevelStartScreen();
         }
@@ -260,7 +259,8 @@
         function startLevel() {
             levelStartScreen.classList.add('hidden');
             levelStartScreen.classList.remove('flex');
-            lastFoodSpawn = performance.now(); // Resetear el temporizador de spawn
+            lastFoodSpawn = performance.now();
+            if(gameLoopId) cancelAnimationFrame(gameLoopId);
             gameLoopId = requestAnimationFrame(gameLoop);
         }
 
@@ -290,7 +290,6 @@
                 ...randomFoodTemplate,
                 x: Math.random() * (canvasWidth - foodSize),
                 y: -foodSize,
-                // Dificultad progresiva de velocidad
                 speed: foodBaseSpeed + (level * 0.25) + Math.random() * (level / 2)
             });
         }
@@ -375,35 +374,60 @@
 
         function drawPlayer() {
             const x = player.x, y = player.y, w = player.width, h = player.height;
-            ctx.fillStyle = '#09503d';
+            const headSize = w; // La cabeza es un cuadrado
+            const cornerRadius = 10;
+
+            // --- DIBUJO DEL CUERPO (CABEZA) ---
+            ctx.fillStyle = '#0fbd70';
             ctx.beginPath();
-            ctx.arc(x + w / 2, y + w / 2, w / 2, 0, Math.PI * 2);
+            ctx.moveTo(x + cornerRadius, y);
+            ctx.lineTo(x + headSize - cornerRadius, y);
+            ctx.arcTo(x + headSize, y, x + headSize, y + cornerRadius, cornerRadius);
+            ctx.lineTo(x + headSize, y + headSize - cornerRadius);
+            ctx.arcTo(x + headSize, y + headSize, x + headSize - cornerRadius, y + headSize, cornerRadius);
+            ctx.lineTo(x + cornerRadius, y + headSize);
+            ctx.arcTo(x, y + headSize, x, y + headSize - cornerRadius, cornerRadius);
+            ctx.lineTo(x, y + cornerRadius);
+            ctx.arcTo(x, y, x + cornerRadius, y, cornerRadius);
+            ctx.closePath();
             ctx.fill();
+
+            // Ojos
             ctx.fillStyle = 'white';
             ctx.beginPath();
-            ctx.arc(x + w * 0.3, y + w * 0.4, w * 0.1, 0, Math.PI * 2);
-            ctx.arc(x + w * 0.7, y + w * 0.4, w * 0.1, 0, Math.PI * 2);
+            ctx.arc(x + headSize * 0.3, y + headSize * 0.4, headSize * 0.1, 0, Math.PI * 2);
+            ctx.arc(x + headSize * 0.7, y + headSize * 0.4, headSize * 0.1, 0, Math.PI * 2);
             ctx.fill();
+            
+            // Sonrisa
             ctx.strokeStyle = 'white';
             ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.arc(x + w / 2, y + w * 0.6, w * 0.25, 0.2 * Math.PI, 0.8 * Math.PI);
+            ctx.arc(x + headSize / 2, y + headSize * 0.6, headSize * 0.25, 0.2 * Math.PI, 0.8 * Math.PI);
             ctx.stroke();
-            const bodyBottomY = y + w, legTopY = bodyBottomY - 10, armY = y + w / 2 + 10;
-            ctx.strokeStyle = '#09503d';
+
+            // --- DIBUJO DE LAS EXTREMIDADES ---
+            const armY = y + headSize * 0.6;
+            const legTopY = y + headSize; // CORRECCIÓN: Las piernas ahora empiezan en el borde inferior de la cabeza.
+            
+            ctx.strokeStyle = '#0fbd70';
             ctx.lineWidth = 6;
             ctx.lineCap = 'round';
+
+            // Piernas
             ctx.beginPath();
-            ctx.moveTo(x + w/2, legTopY);
-            ctx.lineTo(x + w * 0.2, y + h);
-            ctx.moveTo(x + w/2, legTopY);
-            ctx.lineTo(x + w * 0.8, y + h);
+            ctx.moveTo(x + headSize / 2, legTopY);
+            ctx.lineTo(x + headSize * 0.2, y + h);
+            ctx.moveTo(x + headSize / 2, legTopY);
+            ctx.lineTo(x + headSize * 0.8, y + h);
             ctx.stroke();
+
+            // Brazos
             ctx.beginPath();
-            ctx.moveTo(x + w/2, armY);
-            ctx.lineTo(x - 5, y + h * 0.6);
-            ctx.moveTo(x + w/2, armY);
-            ctx.lineTo(x + w + 5, y + h * 0.6);
+            ctx.moveTo(x, armY);
+            ctx.lineTo(x - 15, y + h * 0.6);
+            ctx.moveTo(x + headSize, armY);
+            ctx.lineTo(x + headSize + 15, y + h * 0.6);
             ctx.stroke();
         }
 
@@ -476,7 +500,8 @@
             canvas.width = canvasWidth;
             canvas.height = canvasHeight;
         }
-
+        
+        // --- INICIALIZACIÓN DEL JUEGO ---
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
         canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
@@ -488,9 +513,8 @@
         levelStartButton.addEventListener('click', startLevel);
         window.addEventListener('resize', resizeCanvas);
 
-        // Inicializar la vista
         resizeCanvas();
+
     </script>
 </body>
 </html>
-�
