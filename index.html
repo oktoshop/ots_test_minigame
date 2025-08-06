@@ -94,7 +94,7 @@
                 <p class="mb-6 text-left">
                     - Usa las <kbd>teclas de flecha</kbd> o <kbd>desliza el dedo</kbd> para moverte.<br>
                     - Atrapa la comida segura para ganar puntos.<br>
-                    - ¡Consigue 200 puntos para pasar de nivel!
+                    - ¡Consigue 50 puntos para pasar de nivel!
                 </p>
                 <button id="start-button" class="btn text-xl">Empezar a Jugar</button>
             </div>
@@ -362,7 +362,7 @@
                 gameContainer.classList.add('opacity-0');
             }
 
-            if (score >= 200) {
+            if (score >= 50) {
                 cancelAnimationFrame(gameLoopId);
                 score = 0;
                 showFeedbackMessage(`¡Nivel ${level+1}!`, '#612680');
